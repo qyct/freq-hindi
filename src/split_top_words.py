@@ -1,16 +1,15 @@
 #!/home/workhill/PYENV/bin/python3
 """Split top 30,000 words by frequency into 10 txt files (hw01.txt to hw10.txt)."""
 
-import csv
 from pathlib import Path
 
 
-def split_top_words(input_file: str = "words.csv", output_dir: str = "words"):
+def split_top_words(input_file: str = "words.txt", output_dir: str = "words"):
     """
     Split top 30,000 words (sorted by frequency descending) into 10 files.
 
     Args:
-        input_file: Path to words.csv
+        input_file: Path to words.txt
         output_dir: Directory to save chunk files
     """
     input_path = Path(input_file)
@@ -28,13 +27,10 @@ def split_top_words(input_file: str = "words.csv", output_dir: str = "words"):
 
     words = []
     with open(input_path, 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        header = next(reader)  # Skip header
-
-        for row in reader:
-            if len(row) >= 2:
-                word, freq = row[0], int(row[1])
-                words.append((word, freq))
+        for line in f:
+            if ',' in line:
+                word, freq = line.strip().rsplit(',', 1)
+                words.append((word, int(freq)))
 
     print(f"Total words read: {len(words):,}")
 
@@ -57,7 +53,7 @@ def split_top_words(input_file: str = "words.csv", output_dir: str = "words"):
 
         with open(output_file, 'w', encoding='utf-8') as out:
             for word, freq in chunk:
-                out.write(f"{word}\n")
+                out.write(f"{word},{freq}\n")
 
         print(f"✓ Created {output_file.name} with {len(chunk)} words (freq: {chunk[0][1]:,} to {chunk[-1][1]:,})")
 

@@ -31,8 +31,8 @@ class HindiProcessor:
         Returns:
             Cleaned Hindi text
         """
-        # First, replace multiple consecutive purna virams with single space
-        text = re.sub(r'[।॥]+', ' ', text)
+        # Replace purna viram, deergha viram, and visarga with space
+        text = re.sub(r'[।॥ः]+', ' ', text)
 
         # Keep only Hindi characters and spaces
         cleaned = ""
@@ -228,6 +228,6 @@ class HindiProcessor:
 
         with open(output_path, "w", encoding="utf-8") as f:
             for word, freq in sorted_freq:
-                f.write(f"{word} {freq}\n")
+                f.write(f"{word},{freq}\n")
 
         print(f"\n✓ Saved {len(sorted_freq)} words to {output_path}")
