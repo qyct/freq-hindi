@@ -1,6 +1,6 @@
 # Temporary data
 tmp/
-words.csv
+words.txt
 
 # Python
 __pycache__/

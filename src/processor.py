@@ -215,20 +215,19 @@ class HindiProcessor:
 
         return dict(total_counter)
 
-    def save_frequencies(self, frequencies: Dict[str, int], output_path: str = "words.csv"):
+    def save_frequencies(self, frequencies: Dict[str, int], output_path: str = "words.txt"):
         """
-        Save word frequencies to CSV file.
+        Save word frequencies to text file.
 
         Args:
             frequencies: Dictionary of word -> frequency
-            output_path: Path to output CSV file
+            output_path: Path to output text file
         """
         # Sort by frequency (descending)
         sorted_freq = sorted(frequencies.items(), key=lambda x: x[1], reverse=True)
 
-        with open(output_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerow(["word", "freq"])
-            writer.writerows(sorted_freq)
+        with open(output_path, "w", encoding="utf-8") as f:
+            for word, freq in sorted_freq:
+                f.write(f"{word} {freq}\n")
 
         print(f"\n✓ Saved {len(sorted_freq)} words to {output_path}")

@@ -28,8 +28,8 @@ def main():
     )
     parser.add_argument(
         "--output",
-        default="words.csv",
-        help="Output CSV file path (default: words.csv)"
+        default="words.txt",
+        help="Output file path (default: words.txt)"
     )
     parser.add_argument(
         "--data-dir",
