@@ -82,6 +82,8 @@ class HindiProcessor:
                 counter.update(self._process_csv(filepath))
             elif filepath.suffix == ".txt" or filepath.suffix == "":
                 counter.update(self._process_text(filepath))
+            elif filepath.suffix == ".parquet":
+                counter.update(self._process_parquet(filepath))
             else:
                 print(f"    Skipping unsupported format: {filepath.suffix}")
 
@@ -143,6 +145,39 @@ class HindiProcessor:
 
         except Exception as e:
             print(f"    Text reading error: {e}")
+
+        return dict(counter)
+
+    def _process_parquet(self, filepath: Path) -> Dict[str, int]:
+        """Process Parquet file (HuggingFace format)."""
+        counter = Counter()
+
+        try:
+            import pyarrow.parquet as pq
+
+            print(f"    Reading parquet file...")
+            table = pq.read_table(filepath)
+            df = table.to_pandas()
+
+            # Look for text column
+            text_column = None
+            for col in ['text', 'content', 'data']:
+                if col in df.columns:
+                    text_column = col
+                    break
+
+            if text_column:
+                print(f"    Processing {len(df)} rows...")
+                combined_text = " ".join(df[text_column].fillna('').astype(str).tolist())
+                words = self._extract_words_from_text(combined_text)
+                counter.update(words)
+            else:
+                print(f"    No text column found in {filepath}")
+
+        except ImportError:
+            print(f"    PyArrow not installed, skipping parquet file")
+        except Exception as e:
+            print(f"    Parquet reading error: {e}")
 
         return dict(counter)
 

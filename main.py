@@ -3,6 +3,7 @@
 
 import argparse
 from pathlib import Path
+from collections import Counter
 
 from src.downloader import Downloader
 from src.extractor import Extractor
@@ -83,19 +84,37 @@ def main():
     print("\n[Step 3/3] Processing text and counting word frequencies...")
     processor = HindiProcessor()
 
+    # Process both extracted and huggingface directories
     data_dir = Path(args.data_dir)
-    if not data_dir.exists():
-        print(f"✗ Data directory not found: {data_dir}")
+    hf_dir = Path("tmp/huggingface")
+
+    if not data_dir.exists() and not hf_dir.exists():
+        print(f"✗ No data directories found")
         print("  Run without --skip-extract first")
         return 1
 
-    frequencies = processor.process_directory(data_dir)
+    total_frequencies = {}
 
-    if not frequencies:
+    # Process extracted directory
+    if data_dir.exists():
+        print(f"\nProcessing {data_dir}...")
+        frequencies = processor.process_directory(data_dir)
+        total_frequencies.update(frequencies)
+
+    # Process huggingface directory
+    if hf_dir.exists():
+        print(f"\nProcessing {hf_dir}...")
+        frequencies = processor.process_directory(hf_dir)
+        total_frequencies.update(frequencies)
+
+    if not total_frequencies:
         print("✗ No word frequencies found")
         return 1
 
-    processor.save_frequencies(frequencies, args.output)
+    # Combine frequencies from multiple sources
+    combined = Counter(total_frequencies)
+
+    processor.save_frequencies(dict(combined), args.output)
 
     print("\n" + "=" * 60)
     print("✓ Complete!")
