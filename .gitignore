@@ -1,0 +1,14 @@
+# Temporary data folders
+tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Output
+words.csv
