@@ -36,6 +36,16 @@ def main():
         default="tmp/extracted",
         help="Directory containing extracted data (default: tmp/extracted)"
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from checkpoint if available"
+    )
+    parser.add_argument(
+        "--no-checkpoint",
+        action="store_true",
+        help="Disable checkpoint saving"
+    )
 
     args = parser.parse_args()
 
@@ -84,6 +94,16 @@ def main():
     print("\n[Step 3/3] Processing text and counting word frequencies...")
     processor = HindiProcessor()
 
+    # Try to load checkpoint if resume is enabled
+    total_frequencies = {}
+    if args.resume:
+        checkpoint_path = "tmp/processing_checkpoint.pkl"
+        total_frequencies = processor.load_checkpoint(checkpoint_path)
+        if total_frequencies:
+            print(f"\nResuming from checkpoint...")
+        else:
+            print(f"\nNo checkpoint found, starting fresh...")
+
     # Process all data directories
     data_dir = Path(args.data_dir)
     hf_dir = Path("tmp/huggingface")
@@ -94,25 +114,32 @@ def main():
         print("  Run without --skip-extract first")
         return 1
 
-    total_frequencies = {}
+    checkpoint_enabled = not args.no_checkpoint
+    checkpoint_path = "tmp/processing_checkpoint.pkl"
 
     # Process extracted directory
     if data_dir.exists():
         print(f"\nProcessing {data_dir}...")
         frequencies = processor.process_directory(data_dir)
-        total_frequencies.update(frequencies)
+        total_frequencies = processor.merge_frequencies(total_frequencies, frequencies)
+        if checkpoint_enabled:
+            processor.save_checkpoint(total_frequencies, checkpoint_path)
 
     # Process huggingface directory
     if hf_dir.exists():
         print(f"\nProcessing {hf_dir}...")
         frequencies = processor.process_directory(hf_dir)
-        total_frequencies.update(frequencies)
+        total_frequencies = processor.merge_frequencies(total_frequencies, frequencies)
+        if checkpoint_enabled:
+            processor.save_checkpoint(total_frequencies, checkpoint_path)
 
     # Process github directory
     if gh_dir.exists():
         print(f"\nProcessing {gh_dir}...")
         frequencies = processor.process_directory(gh_dir)
-        total_frequencies.update(frequencies)
+        total_frequencies = processor.merge_frequencies(total_frequencies, frequencies)
+        if checkpoint_enabled:
+            processor.save_checkpoint(total_frequencies, checkpoint_path)
 
     if not total_frequencies:
         print("✗ No word frequencies found")

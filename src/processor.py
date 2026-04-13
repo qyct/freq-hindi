@@ -51,9 +51,9 @@ class HindiProcessor:
         Returns:
             List of words
         """
-        # Split on whitespace and filter empty strings and single characters
+        # Split on whitespace and filter empty strings
         words = text.split()
-        return [word for word in words if len(word) > 1]
+        return [word for word in words if word]
 
     def process_file(self, filepath: Path) -> Dict[str, int]:
         """
@@ -231,3 +231,62 @@ class HindiProcessor:
                 f.write(f"{word},{freq}\n")
 
         print(f"\n✓ Saved {len(sorted_freq)} words to {output_path}")
+
+    def save_checkpoint(self, frequencies: Dict[str, int], checkpoint_path: str = "tmp/checkpoint.pkl"):
+        """
+        Save processing checkpoint for resume support.
+
+        Args:
+            frequencies: Dictionary of word -> frequency
+            checkpoint_path: Path to checkpoint file
+        """
+        import pickle
+
+        checkpoint_dir = Path(checkpoint_path).parent
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+        with open(checkpoint_path, "wb") as f:
+            pickle.dump(frequencies, f)
+
+        print(f"  ✓ Saved checkpoint ({len(frequencies):,} words)")
+
+    def load_checkpoint(self, checkpoint_path: str = "tmp/checkpoint.pkl") -> Dict[str, int]:
+        """
+        Load processing checkpoint for resume support.
+
+        Args:
+            checkpoint_path: Path to checkpoint file
+
+        Returns:
+            Dictionary of word -> frequency, or empty dict if not found
+        """
+        import pickle
+
+        checkpoint_file = Path(checkpoint_path)
+        if not checkpoint_file.exists():
+            return {}
+
+        try:
+            with open(checkpoint_path, "rb") as f:
+                frequencies = pickle.load(f)
+
+            print(f"  ✓ Loaded checkpoint ({len(frequencies):,} words)")
+            return frequencies
+        except Exception as e:
+            print(f"  ✗ Could not load checkpoint: {e}")
+            return {}
+
+    def merge_frequencies(self, *freq_dicts: Dict[str, int]) -> Dict[str, int]:
+        """
+        Merge multiple frequency dictionaries.
+
+        Args:
+            *freq_dicts: Variable number of frequency dictionaries
+
+        Returns:
+            Merged dictionary with summed frequencies
+        """
+        merged = Counter()
+        for freq_dict in freq_dicts:
+            merged.update(freq_dict)
+        return dict(merged)
