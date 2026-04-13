@@ -8,7 +8,7 @@ from collections import Counter
 from src.downloader import Downloader
 from src.extractor import Extractor
 from src.processor import HindiProcessor
-from src.sources import SOURCES
+from src.sources import HindiSources
 
 
 def main():
@@ -48,7 +48,7 @@ def main():
         print("\n[Step 1/3] Downloading corpus files...")
         downloader = Downloader()
         try:
-            downloaded = downloader.download_all(SOURCES)
+            downloaded = downloader.download_all(HindiSources.get_all_download_urls())
             print(f"✓ Downloaded {len(downloaded)} file(s)")
         except Exception as e:
             print(f"✗ Download failed: {e}")
@@ -84,11 +84,12 @@ def main():
     print("\n[Step 3/3] Processing text and counting word frequencies...")
     processor = HindiProcessor()
 
-    # Process both extracted and huggingface directories
+    # Process all data directories
     data_dir = Path(args.data_dir)
     hf_dir = Path("tmp/huggingface")
+    gh_dir = Path("tmp/github")
 
-    if not data_dir.exists() and not hf_dir.exists():
+    if not data_dir.exists() and not hf_dir.exists() and not gh_dir.exists():
         print(f"✗ No data directories found")
         print("  Run without --skip-extract first")
         return 1
@@ -105,6 +106,12 @@ def main():
     if hf_dir.exists():
         print(f"\nProcessing {hf_dir}...")
         frequencies = processor.process_directory(hf_dir)
+        total_frequencies.update(frequencies)
+
+    # Process github directory
+    if gh_dir.exists():
+        print(f"\nProcessing {gh_dir}...")
+        frequencies = processor.process_directory(gh_dir)
         total_frequencies.update(frequencies)
 
     if not total_frequencies:
